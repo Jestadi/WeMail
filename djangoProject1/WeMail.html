@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!-- saved from url=(0043)http://127.0.0.1:5500/WeMail/interface.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>WeMail</title>
+    <link rel="stylesheet" href="./WeMail_files/materialize.min.css">
+    <link href="./WeMail_files/css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333333; /* darkish shade of gray */
+        }
+
+        #header {
+            background-color: #fff;
+            height: 60px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 20px;
+        }
+
+        #logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        #mic {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 60px);
+        }
+
+        #mic img {
+            width: 100px;
+        }
+
+        #mic:active {
+            background-color: #ccc;
+        }
+
+        .page {
+            height: 100vh;
+            transition: background-color 0.5s ease;
+        }
+
+        .page:click {
+            background-color: #fff;
+        }
+    </style>
+<script id="transcript-settings" data-tailwind="chrome-extension://klknhfgkblobpfimidmhkclikdalnoke/tailwind.js" data-daisy="chrome-extension://klknhfgkblobpfimidmhkclikdalnoke/daisy.min.css" data-loading="chrome-extension://klknhfgkblobpfimidmhkclikdalnoke/images/loading.gif" data-start-hidden="true" data-start-light="" data-autoanswer="" data-autoaianswer="" data-snapshot-keybind="shift+ctrl+1" data-search-keybind="shift+ctrl+2" data-search-ai-keybind="shift+ctrl+3"></script></head>
+<body>
+<div id="header">
+    <div id="logo">WeMail</div>
+</div>
+
+<div class="page clicked" onclick="document.querySelector(&#39;.page&#39;).classList.toggle(&#39;clicked&#39;)">
+    <div id="mic">
+        <img src="./WeMail_files/r6rek93io5ie5do603vkqvk919.png">
+    </div>
+</div>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+<script src="./WeMail_files/materialize.min.js"></script>
+
+
+	<script>
+		var recognizer;
+
+		async function app() {
+			// load the model
+			recognizer = speechCommands.create('BROWSER_FFT');
+			await recognizer.ensureModelLoaded();
+
+			// start the recognition
+			recognizer.listen(result => {
+				const scores = result.scores;
+				const word = result.spectrogram.label;
+
+				// print the result to the console
+				console.log(`Word: ${word}, Scores: ${scores}`);
+
+				// handle user's response
+				switch (word) {
+					case "compose":
+						$.get("/compose", function(data) {
+							$("#result").html(data);
+							speak("What is the recipient email address?");
+						});
+						break;
+					case "status":
+						$.get("/status", function(data) {
+							$("#result").html(data);
+							speak("You have 5 unread messages.");
+						});
+						break;
+					case "search":
+						$.get("/search", function(data) {
+							$("#result").html(data);
+							speak("What is the search term?");
+						});
+						break;
+					case "recent":
+						$.get("/recent", function(data) {
+							$("#result").html(data);
+							speak("Here are your last 3 messages.");
+						});
+						break;
+					default:
+						break;
+				}
+			}, {
+				includeSpectrogram: true,
+				probabilityThreshold: 0.75,
+				invokeCallbackOnNoiseAndUnknown: true,
+				overlapFactor: 0.5
+			});
+		}
+
+		// speak out the prompt message
+		function speak(prompt) {
+			const synth = window.speechSynthesis;
+			const utterance = new SpeechSynthesisUtterance(prompt);
+			utterance.rate = 0.8;
+			synth.speak(utterance);
+		}
+
+		// start the app after clicking the button
+		$(document).on("click", function() {
+			app();
+			$(this).off(event);
+			$(this).css("cursor", "default");
+			speak("Choose and speak out the option number for the task you want to perform. Say compose to send a mail. Say status to get your mailbox status. Say search to search a mail. Say recent to get the last 3 mails.");
+		});
+	</script>
+<!-- Code inject--></body></html>

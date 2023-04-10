@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    
+    <title>WeMail</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #333333; /* darkish shade of gray */
+      } 
+      #header {
+        background-color: #fff;
+        height: 60px;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 20px;
+      }
+      
+      #logo {
+        font-size: 24px;
+        font-weight: bold;
+        margin-right: 20px;
+      }
+      
+      #mic {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 60px);
+        position: relative;
+      }
+      
+      #mic img {
+        width: 100px;
+      }
+      
+      #mic:active {
+        background-color: #ccc;
+      }
+      
+      #mic span {
+        position: absolute;
+        bottom: 210px;
+        margin-top: 10px; 
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
+</head>
+<body>
+  <div id="header">
+    <div id="logo">WeMail</div>
+  </div>
+  <div id="mic">
+    <img src="/templates/r6rek93io5ie5do603vkqvk919.png">
+    <span>Click anywhere to start</span>
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.5.2/dist/speech-commands.min.js"></script>
+</html>
+
+
+<script>
+
+    var recognition;
+    async function app() {
+    
+        // initialize the recognition object
+        recognition = new webkitSpeechRecognition();
+    
+        // set the parameters for recognition
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+    
+        // start the recognition
+        recognition.start();
+    
+        // handle recognition results
+        recognition.onresult = function(event) {
+            const word = event.results[0][0].transcript.toLowerCase();
+    
+            // print the result to the console
+            console.log(`Word: ${word}`);
+    
+            // handle user's response
+            switch (word) {
+                case "compose", "compose mail":
+                    $.get("/compose", function(data) {
+                        $("message").html(data);
+                        composeMail();
+                    });
+                    break;
+                case "status","mailbox status","stat us":
+                    $.get("/status", function(data) {
+                        $("message").html(data);
+                        getMailBoxStatus()
+                        
+                    });
+                    break;
+                case "search","search mail","mail search":
+                    $.get("/search", function(data) {
+                        $("message").html(data);
+                        searchMail()
+                    });
+                    break;
+                case "recent","last","last three","sent","last 3":
+                    $.get("/recent", function(data) {
+                        $("message").html(data);
+                        getLatestMails()
+                    });
+                    break;
+                default:
+                    break;
+            }
+        };
+    }
+    // speak out the prompt message
+    function speak(prompt) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(prompt);
+        utterance.rate = 0.8;
+        synth.speak(utterance);
+    }
+    
+    // start the app after clicking the button
+    $("#mic").on('click', function() {
+        app();
+        $(this).off(event);
+        $(this).css("cursor", "default");
+        speak("Choose and speak out the option number for the task you want to perform. Say compose to send a mail. Say status to get your mailbox status. Say search to search a mail. Say recent to get the last 3 mails.");
+    });
+    
+    </script>
+    
